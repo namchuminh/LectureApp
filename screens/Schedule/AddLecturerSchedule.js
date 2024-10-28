@@ -23,14 +23,14 @@ const AddLecturerSchedule = ({ navigation }) => {
     const [selectedValue, setSelectedValue] = useState('');
 
     const handleAdd = () => {
-        console.log('Chọn Giảng Viên', courseName, courseCode, credits);
+        console.log('Chọn Thính Giảng', courseName, courseCode, credits);
     };
 
     return (
         <View style={styles.container}>
             <Appbar.Header style={styles.header}>
                 <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} color="#FFFFFF" />
-                <Appbar.Content title="Thêm Lịch Giảng" titleStyle={styles.headerTitle} />
+                <Appbar.Content title="Mời Giảng Dạy" titleStyle={styles.headerTitle} />
             </Appbar.Header>
             <ScrollView contentContainerStyle={styles.form}>
                 <Text style={styles.label}>Chọn Ngày</Text>
@@ -123,7 +123,7 @@ const AddLecturerSchedule = ({ navigation }) => {
                         useNativeAndroidPickerStyle={false} // Để style tùy chỉnh hoạt động trên Android
                     />
                 </View>
-                <Text style={styles.label}>Chọn Giảng Viên</Text>
+                <Text style={styles.label}>Chọn Thính Giảng</Text>
                 <View style={styles.inputContainer}>
                     <RNPickerSelect
                         onValueChange={(value) => setSelectedValue(value)}
@@ -133,7 +133,7 @@ const AddLecturerSchedule = ({ navigation }) => {
                             { label: 'Hockey', value: 'hockey' },
                         ]}
                         placeholder={{
-                            label: 'Chọn giảng viên...',
+                            label: 'Chọn Thính Giảng...',
                             value: null,
                             color: '#9E9E9E',
                         }}
@@ -153,7 +153,7 @@ const AddLecturerSchedule = ({ navigation }) => {
                     />
                 </View>
                 <Button mode="contained" onPress={handleAdd} style={styles.btn}>
-                    <Text style={styles.btnText}>Lưu</Text>
+                    <Text style={styles.btnText}>Mời Thính Giảng</Text>
                 </Button>
             </ScrollView>
         </View>

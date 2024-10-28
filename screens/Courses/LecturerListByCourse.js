@@ -61,8 +61,7 @@ const LecturerListByCourse = ({ navigation }) => {
         <View style={styles.container}>
             <Appbar.Header style={styles.header}>
                 <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} color="#FFFFFF" />
-                <Appbar.Content title="Giảng Viên Môn Học" titleStyle={styles.headerTitle} />
-                <Appbar.Action icon="plus" onPress={() => navigation.navigate('AddLecturerByCourse')} color="#FFFFFF" />
+                <Appbar.Content title="Thính Giảng Môn Học" titleStyle={styles.headerTitle} />
             </Appbar.Header>
 
             <FlatList

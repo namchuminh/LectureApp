@@ -67,8 +67,7 @@ const Add = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Appbar.Header style={styles.header}>
-        <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} color="#FFFFFF" />
-        <Appbar.Content title="Thêm Giảng Viên" titleStyle={styles.headerTitle} />
+        <Appbar.Content title="Đăng Ký Thính Giảng" titleStyle={styles.headerTitle} />
       </Appbar.Header>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -153,7 +152,7 @@ const Add = ({ navigation }) => {
               onPress={() => setDegreeMenuVisible(true)}
               style={[styles.input, { borderRadius: 5, paddingVertical: 7 }]} // Bỏ border radius
             >
-              Chọn Chuyên Ngành: {degree || 'Chưa chọn'}
+              Chọn Bằng cấp: {degree || 'Chưa chọn'}
             </Button>
           }
         >
@@ -193,49 +192,17 @@ const Add = ({ navigation }) => {
             />
           ))}
         </Menu>
-        <Text style={styles.label}>Trường</Text>
-        <TextInput
-          value={university}
-          onChangeText={setUniversity}
-          style={styles.input}
-          mode="outlined"
-          placeholder="Nhập tên trường"
-        />
-        <Text style={styles.label}>Kinh nghiệm (năm)</Text>
-        <TextInput
-          value={yearsOfExperience}
-          onChangeText={setYearsOfExperience}
-          style={styles.input}
-          mode="outlined"
-          keyboardType="numeric"
-          placeholder="Nhập số năm kinh nghiệm"
-        />
-        <Text style={styles.label}>Chức vụ hiện tại</Text>
-        <TextInput
-          value={currentPosition}
-          onChangeText={setCurrentPosition}
-          style={styles.input}
-          mode="outlined"
-          placeholder="Nhập chức vụ hiện tại"
-        />
-        <Text style={styles.label}>Tổ chức</Text>
-        <TextInput
-          value={institution}
-          onChangeText={setInstitution}
-          style={styles.input}
-          mode="outlined"
-          placeholder="Nhập tên tổ chức"
-        />
-        <Text style={styles.label}>Tiểu sử</Text>
-        <TextInput
-          value={bio}
-          onChangeText={setBio}
-          style={styles.input}
-          mode="outlined"
-          placeholder="Nhập tiểu sử"
-        />
+        
+        <Text style={styles.label}>Ảnh Bằng Cấp</Text>
+        <TouchableOpacity onPress={handleSelectImage} style={styles.inputImage}>
+          {photoUrl ? (
+            <Image source={{ uri: photoUrl }} style={styles.image} />
+          ) : (
+            <Text style={styles.placeholder}>Chọn ảnh từ thư viện</Text>
+          )}
+        </TouchableOpacity>
         <Button style={styles.btn}>
-          <Text style={styles.btnText}>Lưu</Text>
+          <Text style={styles.btnText}>Đăng Ký</Text>
         </Button>
       </ScrollView>
     </View>

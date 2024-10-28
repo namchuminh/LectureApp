@@ -53,9 +53,9 @@ const LecturerScheduleScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Appbar.Header style={styles.header}>
-        <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} color="#FFFFFF" />
+        <Appbar.Action icon="home" onPress={() => navigation.goBack()} color="#FFFFFF" />
         <Appbar.Content title="Lịch Giảng" titleStyle={styles.headerTitle} />
-        <Appbar.Action icon="plus" onPress={() => navigation.navigate('AddLecturerSchedule')} color="#FFFFFF" />
+        <Appbar.Action icon="account-plus" onPress={() => navigation.navigate('AddLecturerSchedule')} color="#FFFFFF" />
       </Appbar.Header>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>

@@ -31,7 +31,7 @@ const ListCourse = ({ navigation }) => {
                         <Divider style={styles.divider} />
                         <Card.Actions style={styles.actions}>
                             <Button  style={{ backgroundColor: 'white' }} onPress={() => navigation.navigate('LecturerListByCourse', { course: item })}>
-                                <Text style={styles.btnText}>Giảng Viên</Text>
+                                <Text style={styles.btnText}>Thính Giảng</Text>
                             </Button>
                             <IconButton
                                 icon="square-edit-outline"

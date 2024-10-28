@@ -7,6 +7,8 @@ import { List, Add, Edit } from '../screens/Lecturers';
 import { ListDepartment, AddDepartment, EditDepartment } from '../screens/Department';
 import { ListCourse, AddCourse, EditCourse, LecturerListByCourse, AddLecturerByCourse } from '../screens/Courses';
 import { LecturerScheduleScreen, AddLecturerSchedule } from '../screens/Schedule';
+import { Profile } from '../screens/Profile';
+
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -49,9 +51,9 @@ const LecturerStack = () => (
   </Stack.Navigator>
 );
 
-const SettingStack = () => (
+const ProfileStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="Setting" component={List} />
+    <Stack.Screen name="Setting" component={Profile} />
     {/* Add other settings-related screens here if needed */}
   </Stack.Navigator>
 );
@@ -106,7 +108,7 @@ const AppNavigator = () => {
         />
         <Tab.Screen 
           name="Setting" 
-          component={SettingStack} 
+          component={ProfileStack} 
           options={{ tabBarLabel: 'Cá Nhân' }} 
         />
       </Tab.Navigator>

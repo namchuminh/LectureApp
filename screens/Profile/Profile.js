@@ -2,9 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, ImageBackground, TouchableOpacity } from 'react-native';
 import { Appbar, Button } from 'react-native-paper';
 
-const Edit = ({ route, navigation }) => {
-    const lecturer = {
-        lecturer_id: 2,
+const Profile = ({ navigation }) => {
+    const userProfile = {
         name: 'Trần Thị B',
         gender: 'Nữ',
         date_of_birth: '1990-08-20',
@@ -16,70 +15,68 @@ const Edit = ({ route, navigation }) => {
         university: 'Đại học Sư Phạm Kỹ Thuật',
         years_of_experience: 5,
         photo_url: 'https://randomuser.me/api/portraits/women/2.jpg',
-        status: 1,
     };
 
     return (
         <View style={styles.container}>
             {/* Header */}
             <Appbar.Header style={styles.header}>
-                <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} color="#FFFFFF" />
-                <Appbar.Content title="Thông Tin" titleStyle={styles.headerTitle} />
-                <Appbar.Action icon={lecturer.status == 0 ? "check" : "trash-can"} color="#FFFFFF" />
+                <Appbar.Action icon="home" onPress={() => navigation.goBack()} color="#FFFFFF" />
+                <Appbar.Content title="Cá Nhân" titleStyle={styles.headerTitle} />
+                <Appbar.Action icon="square-edit-outline" color="#FFFFFF" />
             </Appbar.Header>
 
             {/* Avatar */}
             <View style={styles.avatarContainer}>
                 <ImageBackground
-                    source={require('../../assets/bg-lecture.jpg')} // Đường dẫn tới hình ảnh
+                    source={require('../../assets/bg-lecture.jpg')} // Đường dẫn tới hình ảnh nền
                     style={styles.avatarBackground}
                 >
-                    <Image source={{ uri: lecturer.photo_url }} style={styles.avatar} />
+                    <Image source={{ uri: userProfile.photo_url }} style={styles.avatar} />
                 </ImageBackground>
             </View>
 
-            {/* Thông tin giảng viên */}
+            {/* Thông tin người dùng */}
             <View style={styles.infoContainer}>
                 <View style={styles.row}>
                     <Text style={styles.label}>Họ và Tên:</Text>
-                    <Text style={styles.value}>{lecturer.name}</Text>
+                    <Text style={styles.value}>{userProfile.name}</Text>
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Giới Tính:</Text>
-                    <Text style={styles.value}>{lecturer.gender}</Text>
+                    <Text style={styles.value}>{userProfile.gender}</Text>
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Ngày Sinh:</Text>
-                    <Text style={styles.value}>{lecturer.date_of_birth}</Text>
+                    <Text style={styles.value}>{userProfile.date_of_birth}</Text>
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Email:</Text>
-                    <Text style={styles.value}>{lecturer.email}</Text>
+                    <Text style={styles.value}>{userProfile.email}</Text>
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Điện Thoại:</Text>
-                    <Text style={styles.value}>{lecturer.phone}</Text>
+                    <Text style={styles.value}>{userProfile.phone}</Text>
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Địa Chỉ:</Text>
-                    <Text style={styles.value}>{lecturer.address}</Text>
+                    <Text style={styles.value}>{userProfile.address}</Text>
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Bằng Cấp:</Text>
-                    <Text style={styles.value}>{lecturer.degree}</Text>
+                    <Text style={styles.value}>{userProfile.degree}</Text>
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Chuyên Ngành:</Text>
-                    <Text style={styles.value}>{lecturer.major}</Text>
+                    <Text style={styles.value}>{userProfile.major}</Text>
                 </View>
-                <View style={styles.row}>
-                    <Text style={styles.label}>Đánh Giá:</Text>
-                    <Text style={styles.value}>4.5 / 5</Text>
-                </View>
-                <Button style={styles.btn}>
-                    <Text style={styles.btnText}>Xem Bằng Cấp</Text>
-                </Button>
+
             </View>
+
+            {/* Nút Đăng Xuất */}
+            <TouchableOpacity style={styles.logoutButton} onPress={() => {/* Xử lý đăng xuất */}}>
+                <Text style={styles.logoutButtonText}>Đăng Xuất</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -106,11 +103,6 @@ const styles = StyleSheet.create({
         borderRadius: 50, // Hình tròn
         marginVertical: 30
     },
-    separator: {
-        height: 1,
-        backgroundColor: '#CCCCCC',
-        marginVertical: 10,
-    },
     infoContainer: {
         marginHorizontal: 20,
         marginTop: 15
@@ -123,7 +115,8 @@ const styles = StyleSheet.create({
         borderBottomColor: '#CCCCCC',
     },
     label: {
-        fontSize: '15'
+        fontSize: 15,
+        fontWeight: 'bold',
     },
     value: {
         color: '#555555',
@@ -133,14 +126,17 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    btn: {
-        backgroundColor: '#3F51B5',
+    logoutButton: {
+        backgroundColor: '#3F51B5', // Màu đỏ cho nút đăng xuất
         borderRadius: 4,
-        marginTop: 20
+        margin: 20,
+        padding: 10,
+        alignItems: 'center',
     },
-    btnText: {
-        color: '#FFFFFF'
+    logoutButtonText: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
     },
 });
 
-export default Edit;
+export default Profile;
