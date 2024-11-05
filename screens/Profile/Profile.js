@@ -1,24 +1,59 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, ImageBackground, TouchableOpacity } from 'react-native';
-import { Appbar, Button } from 'react-native-paper';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, ImageBackground, TouchableOpacity, ScrollView } from 'react-native';
+import { Appbar } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from "@react-navigation/native";
+import axios from 'axios';
+import CryptoJS from 'crypto-js';
 
-const Profile = ({ navigation }) => {
-    const userProfile = {
-        name: 'Trần Thị B',
-        gender: 'Nữ',
-        date_of_birth: '1990-08-20',
-        email: 'b.tran@example.com',
-        phone: '0987654321',
-        address: '456 Đường XYZ, Quận 2, TP.HCM',
-        degree: 'Thạc Sĩ',
-        major: 'Kỹ thuật phần mềm',
-        university: 'Đại học Sư Phạm Kỹ Thuật',
-        years_of_experience: 5,
-        photo_url: 'https://randomuser.me/api/portraits/women/2.jpg',
+const decodeJWT = (token) => {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+        throw new Error('JWT không hợp lệ');
+    }
+    
+    const payload = parts[1];
+    const decoded = CryptoJS.enc.Base64.parse(payload);
+    return JSON.parse(decoded.toString(CryptoJS.enc.Utf8));
+};
+const Profile = ({ setIsLoggedIn, navigation }) => {
+    const isFocused = useIsFocused();
+
+    const [userProfile, setUserProfile] = useState({});
+
+    const fetchData = async () => {
+        try {   
+            const token = await AsyncStorage.getItem('token');
+            const decodedToken = decodeJWT(token);
+
+            if (token) {
+                
+                const response = await axios.get(`http://10.0.2.2:3001/lecturers/${decodedToken.lecturer.lecturer_id}`);
+
+                setUserProfile(response.data.lecturer);
+            }
+        } catch (error) {
+            console.error('Lỗi khi lấy thông tin:', error);
+        }
     };
 
+    useEffect(() => {
+        fetchData();
+    }, [isFocused])
+
+    const handleLogout = async () => {
+        try {
+            // Xóa token khỏi AsyncStorage
+            await AsyncStorage.removeItem('token');
+            setIsLoggedIn(false);
+            navigation.navigate('Login'); 
+        } catch (error) {
+            console.error('Lỗi khi đăng xuất:', error);
+        }
+    }
+
     return (
-        <View style={styles.container}>
+        <ScrollView style={styles.container}>
             {/* Header */}
             <Appbar.Header style={styles.header}>
                 <Appbar.Action icon="home" onPress={() => navigation.goBack()} color="#FFFFFF" />
@@ -32,7 +67,7 @@ const Profile = ({ navigation }) => {
                     source={require('../../assets/bg-lecture.jpg')} // Đường dẫn tới hình ảnh nền
                     style={styles.avatarBackground}
                 >
-                    <Image source={{ uri: userProfile.photo_url }} style={styles.avatar} />
+                    <Image source={{ uri: `http://10.0.2.2:3001/${userProfile.photo_url}` }} style={styles.avatar} />
                 </ImageBackground>
             </View>
 
@@ -74,10 +109,10 @@ const Profile = ({ navigation }) => {
             </View>
 
             {/* Nút Đăng Xuất */}
-            <TouchableOpacity style={styles.logoutButton} onPress={() => {/* Xử lý đăng xuất */}}>
+            <TouchableOpacity style={styles.logoutButton} onPress={() => handleLogout()}>
                 <Text style={styles.logoutButtonText}>Đăng Xuất</Text>
             </TouchableOpacity>
-        </View>
+        </ScrollView>
     );
 };
 

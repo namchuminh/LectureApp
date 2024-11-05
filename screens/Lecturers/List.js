@@ -1,17 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FlatList, View, StyleSheet, Text } from 'react-native';
-import { Appbar, Card, Avatar, IconButton, Button } from 'react-native-paper';
+import { Appbar, Card, Avatar } from 'react-native-paper';
+import axios from 'axios';
+import { useIsFocused } from "@react-navigation/native";
+
 
 const List = ({ navigation }) => {
-    const initialLecturers = [
-        { lecturer_id: 1, name: 'Nguyễn Văn A', email: 'nguyenvana@example.com', degree: 'Tiến Sĩ', university: 'Đại học ABC', photo_url: 'https://via.placeholder.com/150', status: 1 },
-        { lecturer_id: 2, name: 'Trần Thị B', email: 'tranthib@example.com', degree: 'Thạc Sĩ', university: 'Đại học DEF', photo_url: 'https://via.placeholder.com/150', status: 0 },
-        { lecturer_id: 3, name: 'Lê Văn C', email: 'levanc@example.com', degree: 'Cử Nhân', university: 'Đại học GHI', photo_url: 'https://via.placeholder.com/150', status: 0 },
-        { lecturer_id: 4, name: 'Phạm Thị D', email: 'phamthid@example.com', degree: 'Tiến Sĩ', university: 'Đại học XYZ', photo_url: 'https://via.placeholder.com/150', status: 1 },
-        { lecturer_id: 5, name: 'Hoàng Văn E', email: 'hoangvane@example.com', degree: 'Thạc Sĩ', university: 'Đại học LMN', photo_url: 'https://via.placeholder.com/150', status: 0 },
-    ];
-
-    const [lecturers, setLecturers] = useState(initialLecturers);
+    const isFocused = useIsFocused();
+    const [lecturers, setLecturers] = useState([]);
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState('Danh sách'); // Trạng thái để lưu tab đang chọn
 
@@ -25,6 +21,21 @@ const List = ({ navigation }) => {
     ).filter(
         (lecturer) => (activeTab === 'Danh sách' ? lecturer.status === 1 : lecturer.status === 0)
     );
+
+    const fetchData = async () => {
+        axios.get('http://10.0.2.2:3001/lecturers')
+        .then(response => {
+            setLecturers(response.data.lecturers)
+        })
+        .catch(error => {
+            console.error('Lỗi khi lấy thông tin:', error);
+        });
+    }
+
+    
+    useEffect(() => {
+        fetchData();
+    },[isFocused])
 
     return (
         <View style={styles.container}>
@@ -60,14 +71,14 @@ const List = ({ navigation }) => {
                 data={filteredLecturers}
                 keyExtractor={(item) => item.lecturer_id.toString()}
                 renderItem={({ item }) => (
-                    <Card style={styles.card} onPress={() => navigation.navigate('Edit')}>
+                    <Card style={styles.card} onPress={() => navigation.navigate('Edit', { lecturer_id: item.lecturer_id })}>
                         <Card.Title
                             title={item.name}
-                            subtitle={`${item.degree} - ${item.university}`}
+                            subtitle={`${item.degree} - ${item.major}`}
                             left={(props) => (
                                 <Avatar.Image
                                     {...props}
-                                    source={{ uri: item.photo_url }}
+                                    source={{ uri: `http://10.0.2.2:3001/${item.photo_url}` }}
                                     size={50}
                                 />
                             )}

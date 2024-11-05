@@ -1,14 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
 import { Card, Text, Button, IconButton, Divider, Appbar } from 'react-native-paper';
+import axios from 'axios';
+import { useIsFocused } from "@react-navigation/native";
 
-const departments = [
-    { department_id: 1, name: 'Bộ môn Khoa học dữ liệu', description: 'Nghiên cứu về AI và ML', createdAt: '2024-01-01' },
-    { department_id: 2, name: 'Bộ môn Hệ thống thông tin', description: 'Hệ thống và quản lý dữ liệu', createdAt: '2024-01-15' },
-    // Add more sample data...
-];
 
 const DepartmentList = ({ navigation }) => {
+    const isFocused = useIsFocused();
+    const [departments, setDepartments] = useState([]);
+
+    const fetchData = async () => {
+        axios.get('http://10.0.2.2:3001/departments')
+        .then(response => {
+            setDepartments(response.data.departments)
+        })
+        .catch(error => {
+            console.error('Lỗi khi lấy thông tin:', error);
+        });
+    }
+
+    
+    useEffect(() => {
+        fetchData();
+    },[isFocused])
+
+    const handelDelete = (id) => {
+        axios.delete(`http://10.0.2.2:3001/departments/${id}`)
+        .then(response => {
+            fetchData();
+        })
+        .catch(error => {
+            console.error('Lỗi khi lấy thông tin:', error);
+        });
+    }
+
     return (
         <View style={styles.container}>
             <Appbar.Header style={styles.header}>
@@ -24,24 +49,23 @@ const DepartmentList = ({ navigation }) => {
                     <Card style={styles.card}>
                         <Card.Title title={item.name} />
                         <Card.Content>
-                            <Text>Mô tả: {item.description}</Text>
+                            <Text>{item.description}</Text>
                             <Text></Text>
-                            <Text>Ngày tạo: {item.createdAt}</Text>
                         </Card.Content>
                         <Divider style={styles.divider} />
                         <Card.Actions style={styles.actions}>
-                            <Button  style={{ backgroundColor: 'white' }} onPress={() => navigation.navigate('ListCourse', { course: item })}>
+                            <Button  style={{ backgroundColor: 'white' }} onPress={() => navigation.navigate('ListCourse', { department_id: item.department_id })}>
                                 <Text style={styles.btnText}>Môn Học</Text>
                             </Button>
                             <IconButton
                                 icon="square-edit-outline"
                                 color="#D32F2F"
-                                onPress={() => navigation.navigate('EditDepartment', { course: item })}
+                                onPress={() => navigation.navigate('EditDepartment', { department_id: item.department_id })}
                             />
                             <IconButton
                                 icon="delete"
                                 color="#D32F2F"
-                                onPress={() => console.log('Xóa', item.name)}
+                                onPress={() => handelDelete(item.department_id)}
                             />
                         </Card.Actions>
                     </Card>

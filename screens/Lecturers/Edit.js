@@ -1,31 +1,59 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, ImageBackground, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, ImageBackground, ScrollView  } from 'react-native';
 import { Appbar, Button } from 'react-native-paper';
+import axios from 'axios';
+
 
 const Edit = ({ route, navigation }) => {
-    const lecturer = {
-        lecturer_id: 2,
-        name: 'Trần Thị B',
-        gender: 'Nữ',
-        date_of_birth: '1990-08-20',
-        email: 'b.tran@example.com',
-        phone: '0987654321',
-        address: '456 Đường XYZ, Quận 2, TP.HCM',
-        degree: 'Thạc Sĩ',
-        major: 'Kỹ thuật phần mềm',
-        university: 'Đại học Sư Phạm Kỹ Thuật',
-        years_of_experience: 5,
-        photo_url: 'https://randomuser.me/api/portraits/women/2.jpg',
-        status: 1,
-    };
+    const { lecturer_id } = route.params;
+    const [showDegree, setShowDegree] = useState(false);
+    const [lecturer, setLecturer] = useState({});
+
+    const fetchData = () => {
+        axios.get(`http://10.0.2.2:3001/lecturers/${lecturer_id}`)
+        .then(response => {
+            setLecturer(response.data.lecturer)
+        })
+        .catch(error => {
+            console.error('Lỗi khi lấy thông tin:', error);
+        });
+    }
+
+    useEffect(() => {
+        fetchData();
+    }, []); 
+
+    const handleStatus = (status) => {
+        if(status == 0){
+            axios.patch(`http://10.0.2.2:3001/lecturers/${lecturer_id}/status`)
+            .then(response => {
+                fetchData();
+            })
+            .catch(error => {
+                console.error('Lỗi khi lấy thông tin:', error);
+            });
+        }else{
+            axios.delete(`http://10.0.2.2:3001/lecturers/${lecturer_id}`)
+            .then(response => {
+                navigation.goBack();
+            })
+            .catch(error => {
+                console.error('Lỗi khi lấy thông tin:', error);
+            });
+        }
+    }
+
+    const handleShowDegree = () => {
+
+    }
 
     return (
-        <View style={styles.container}>
+        <ScrollView style={styles.container}>
             {/* Header */}
             <Appbar.Header style={styles.header}>
                 <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} color="#FFFFFF" />
                 <Appbar.Content title="Thông Tin" titleStyle={styles.headerTitle} />
-                <Appbar.Action icon={lecturer.status == 0 ? "check" : "trash-can"} color="#FFFFFF" />
+                <Appbar.Action onPress={() => handleStatus(lecturer.status)} icon={lecturer.status == 0 ? "check" : "trash-can"} color="#FFFFFF" />
             </Appbar.Header>
 
             {/* Avatar */}
@@ -34,7 +62,7 @@ const Edit = ({ route, navigation }) => {
                     source={require('../../assets/bg-lecture.jpg')} // Đường dẫn tới hình ảnh
                     style={styles.avatarBackground}
                 >
-                    <Image source={{ uri: lecturer.photo_url }} style={styles.avatar} />
+                    <Image source={{ uri: `http://10.0.2.2:3001/${lecturer.photo_url}` }} style={styles.avatar} />
                 </ImageBackground>
             </View>
 
@@ -76,11 +104,17 @@ const Edit = ({ route, navigation }) => {
                     <Text style={styles.label}>Đánh Giá:</Text>
                     <Text style={styles.value}>4.5 / 5</Text>
                 </View>
-                <Button style={styles.btn}>
-                    <Text style={styles.btnText}>Xem Bằng Cấp</Text>
-                </Button>
+                {
+                    showDegree == true 
+                    ?
+                        <Image source={{ uri: `http://10.0.2.2:3001/${lecturer.photo_degree}` }} style={styles.degreeImage} />
+                    :
+                    <Button style={styles.btn} onPress={() => setShowDegree(true)}>
+                        <Text style={styles.btnText}>Xem Bằng Cấp</Text>
+                    </Button>
+                }
             </View>
-        </View>
+        </ScrollView>
     );
 };
 
@@ -123,7 +157,7 @@ const styles = StyleSheet.create({
         borderBottomColor: '#CCCCCC',
     },
     label: {
-        fontSize: '15'
+        fontSize: 15
     },
     value: {
         color: '#555555',
@@ -136,10 +170,15 @@ const styles = StyleSheet.create({
     btn: {
         backgroundColor: '#3F51B5',
         borderRadius: 4,
-        marginTop: 20
+        marginVertical: 20
     },
     btnText: {
         color: '#FFFFFF'
+    },
+    degreeImage: {
+        width: '100%',              
+        height: 200,
+        marginVertical: 20
     },
 });
 

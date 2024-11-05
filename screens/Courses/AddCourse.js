@@ -1,14 +1,32 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { TextInput, Button, Appbar, Text } from 'react-native-paper';
+import axios from 'axios';
 
-const AddCourse = ({ navigation }) => {
+const AddCourse = ({ route, navigation }) => {
+  const { department_id } = route.params || {};
   const [courseName, setCourseName] = useState('');
   const [courseCode, setCourseCode] = useState('');
   const [credits, setCredits] = useState('');
 
   const handleAdd = () => {
-    console.log('Thêm khóa học mới', courseName, courseCode, credits);
+    if (!courseName || !courseCode || !credits) {
+      alert("Vui lòng nhập đủ thông tin môn học!");
+      return;
+    }
+
+    axios.post('http://10.0.2.2:3001/courses', {
+      course_name: courseName,
+      course_code: courseCode,
+      department_id: department_id,
+      credits: credits
+    })
+      .then(response => {
+        navigation.goBack();
+      })
+      .catch(error => {
+        console.error('Lỗi khi lấy thông tin:', error);
+      });
   };
 
   return (
@@ -16,6 +34,7 @@ const AddCourse = ({ navigation }) => {
       <Appbar.Header style={styles.header}>
         <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} color="#FFFFFF" />
         <Appbar.Content title="Thêm Môn Học" titleStyle={styles.headerTitle} />
+        <Appbar.Action />
       </Appbar.Header>
       <ScrollView contentContainerStyle={styles.form}>
         <Text style={styles.label}>Tên Môn Học</Text>

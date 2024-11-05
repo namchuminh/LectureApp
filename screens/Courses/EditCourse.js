@@ -1,14 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { TextInput, Button, Appbar, Text } from 'react-native-paper';
+import axios from 'axios';
 
-const EditCourse = ({ navigation }) => {
+const EditCourse = ({ route, navigation }) => {
+  const { course_id } = route.params;
+
   const [courseName, setCourseName] = useState('');
   const [courseCode, setCourseCode] = useState('');
-  const [credits, setCredits] = useState('');
+  const [credits, setCredits] = useState('1');
 
-  const handleAdd = () => {
-    console.log('Thêm khóa học mới', courseName, courseCode, credits);
+  const fetchData = () => {
+    axios.get(`http://10.0.2.2:3001/courses/${course_id}`)
+      .then(response => {
+        setCourseName(response.data.course_name)
+        setCourseCode(response.data.course_code)
+        setCredits(response.data.credits.toString())
+      })
+      .catch(error => {
+        console.error('Lỗi khi lấy thông tin:', error);
+      });
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleEdit = () => {
+    if(!courseName || !courseCode || !credits){
+      fetchData();
+      alert("Vui lòng nhập đủ thông tin môn học!");
+      return;
+    }
+
+    axios.put(`http://10.0.2.2:3001/courses/${course_id}`, {
+      course_name: courseName,
+      course_code: courseCode,
+      credits: credits
+    })
+    .then(response => {
+        navigation.goBack();
+    })
+    .catch(error => {
+        console.error('Lỗi khi lấy thông tin:', error);
+    });
   };
 
   return (
@@ -16,6 +51,7 @@ const EditCourse = ({ navigation }) => {
       <Appbar.Header style={styles.header}>
         <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} color="#FFFFFF" />
         <Appbar.Content title="Thêm Môn Học" titleStyle={styles.headerTitle} />
+        <Appbar.Action />
       </Appbar.Header>
       <ScrollView contentContainerStyle={styles.form}>
         <Text style={styles.label}>Tên Môn Học</Text>
@@ -40,7 +76,7 @@ const EditCourse = ({ navigation }) => {
           placeholder="Nhập số tín chỉ"
           keyboardType="numeric"
         />
-        <Button mode="contained" onPress={handleAdd} style={styles.btn}>
+        <Button mode="contained" onPress={handleEdit} style={styles.btn}>
           <Text style={styles.btnText}>Lưu</Text>
         </Button>
       </ScrollView>
