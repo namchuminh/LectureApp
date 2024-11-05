@@ -29,7 +29,11 @@ const Login = ({ setIsLoggedIn, navigation }) => {
       setIsLoggedIn(true); // Cập nhật trạng thái đăng nhập
       navigation.navigate('LecturerScheduleScreen'); // Chuyển đến trang chủ
     } catch (error) {
-      alert("Sai tài khoản hoặc mật khẩu!");
+      if (error.response && error.response.data && error.response.data.message) {
+        alert(error.response.data.message);
+      } else {
+        alert("Sai tài khoản hoặc mật khẩu!");
+      }
     }
   };
 
