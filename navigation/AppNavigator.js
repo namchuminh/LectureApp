@@ -38,7 +38,6 @@ const DepartmentStack = () => (
 const ScheduleStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="LecturerScheduleScreen" component={LecturerScheduleScreen} />
-    <Stack.Screen name="AddLecturerSchedule" component={AddLecturerSchedule} />
   </Stack.Navigator>
 );
 
@@ -47,6 +46,7 @@ const LecturerStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="List" component={List} />
     <Stack.Screen name="Edit" component={Edit} />
+    <Stack.Screen name="AddLecturerSchedule" component={AddLecturerSchedule} />
   </Stack.Navigator>
 );
 
@@ -124,7 +124,7 @@ const AppNavigator = () => {
           <Tab.Screen 
             name="Lecturer" 
             component={LecturerStack} 
-            options={{ tabBarLabel: 'Giảng Viên' }} 
+            options={{ tabBarLabel: 'Thính Giảng' }} 
           />
           <Tab.Screen 
             name="Setting" 

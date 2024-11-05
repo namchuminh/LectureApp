@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { TextInput, Button, Appbar, Text } from 'react-native-paper';
+import { Button, Appbar, Text } from 'react-native-paper';
 import RNPickerSelect from 'react-native-picker-select';
+import axios from 'axios';
 
 const getDatesUntilEndOfMonth = () => {
     const today = new Date();
@@ -18,12 +19,72 @@ const getDatesUntilEndOfMonth = () => {
  
 const dateItems = getDatesUntilEndOfMonth();
 
-const AddLecturerSchedule = ({ navigation }) => {
-    const [courseName, setCourseName] = useState('');
-    const [selectedValue, setSelectedValue] = useState('');
+const AddLecturerSchedule = ({ route, navigation }) => {
+    const { lecturer_id } = route.params;
+
+    const [date, setDate] = useState('');
+    const [section, setSection] = useState('');
+    const [course, setCourse] = useState('');
+    const [departments, setDepartments] = useState('');
+    const [listDepartments, setListDepartments] = useState([]);
+    const [listCourses, setListCourses] = useState([]);
+
+    const fetchData = async () => {
+        axios.get('http://10.0.2.2:3001/departments')
+        .then(response => {
+            const formattedDepartments = response.data.departments.map(department => ({
+                label: department.name,
+                value: department.department_id
+            }));
+            setListDepartments(formattedDepartments)
+        })
+        .catch(error => {
+            console.error('Lỗi khi lấy thông tin:', error);
+        });
+    }
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchDataCourse = async (id) => {
+        axios.get(`http://10.0.2.2:3001/courses/${id}/index`)
+        .then(response => {
+            const formattedCourses = response.data.courses.map(course => ({
+                label: course.course_name,
+                value: course.course_id
+            }));
+            setListCourses(formattedCourses)
+        })
+        .catch(error => {
+            console.error('Lỗi khi lấy thông tin:', error);
+        });
+    }
+    const handleChangeDepartments = (value) => {
+        setDepartments(value);
+        fetchDataCourse(value);
+    }
 
     const handleAdd = () => {
-        console.log('Chọn Thính Giảng', courseName, courseCode, credits);
+        const data = {  
+            lecturer_id,
+            course_id: course,
+            date: date.split('/').reverse().join('-'),
+            section
+        };
+
+        axios.post(`http://10.0.2.2:3001/schedules`, data)
+        .then(response => {
+            alert("Mời thành công!");
+            navigation.navigate('List');
+        })
+        .catch(error => {
+            if (error.response && error.response.data && error.response.data.message) {
+                alert(error.response.data.message);
+            } else {
+                alert("Có lỗi khi thực hiện mời giảng dạy!");
+            }
+        });
     };
 
     return (
@@ -31,15 +92,16 @@ const AddLecturerSchedule = ({ navigation }) => {
             <Appbar.Header style={styles.header}>
                 <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} color="#FFFFFF" />
                 <Appbar.Content title="Mời Giảng Dạy" titleStyle={styles.headerTitle} />
+                <Appbar.Action />
             </Appbar.Header>
             <ScrollView contentContainerStyle={styles.form}>
                 <Text style={styles.label}>Chọn Ngày</Text>
                 <View style={styles.inputContainer}>
                     <RNPickerSelect
-                        onValueChange={(value) => setSelectedValue(value)}
+                        onValueChange={(value) => setDate(value)}
                         items={dateItems}
                         placeholder={{
-                            label: 'Chọn ngày...',
+                            label: 'Chọn ngày',
                             value: null,
                             color: '#9E9E9E',
                         }}
@@ -54,25 +116,25 @@ const AddLecturerSchedule = ({ navigation }) => {
                                 right: 12,
                             },
                         }}
-                        value={selectedValue}
+                        value={date}
                         useNativeAndroidPickerStyle={false} // Để style tùy chỉnh hoạt động trên Android
                     />
                 </View>
                 <Text style={styles.label}>Chọn Tiết</Text>
                 <View style={styles.inputContainer}>
                     <RNPickerSelect
-                        onValueChange={(value) => setSelectedValue(value)}
+                        onValueChange={(value) => setSection(value)}
                         items={[
-                            { label: 'Tiết 1', value: 'tiet1' },
-                            { label: 'Tiết 2', value: 'tiet2' },
-                            { label: 'Tiết 3', value: 'tiet3' },
-                            { label: 'Tiết 4', value: 'tiet4' },
-                            { label: 'Tiết 5', value: 'tiet5' },
-                            { label: 'Tiết 6', value: 'tiet6' },
-                            { label: 'Tiết 7', value: 'tiet7' },
-                            { label: 'Tiết 8', value: 'tiet8' },
-                            { label: 'Tiết 9', value: 'tiet9' },
-                            { label: 'Tiết 10', value: 'tiet10' },
+                            { label: 'Tiết 1 - Tiết 6', value: 'Tiết 1 - Tiết 6' },
+                            { label: 'Tiết 1 - Tiết 3', value: 'Tiết 1 - Tiết 3' },
+                            { label: 'Tiết 1 - Tiết 5', value: 'Tiết 1 - Tiết 5' },
+                            { label: 'Tiết 4 - Tiết 6', value: 'Tiết 4 - Tiết 6' },
+                            { label: 'Tiết 7 - Tiết 12', value: 'Tiết 7 - Tiết 12' },
+                            { label: 'Tiết 7 - Tiết 11', value: 'Tiết 7 - Tiết 11' },
+                            { label: 'Tiết 7 - Tiết 9', value: 'Tiết 7 - Tiết 9' },
+                            { label: 'Tiết 10 - Tiết 12', value: 'Tiết 10 - Tiết 12' },
+                            { label: 'Tiết 13 - Tiết 17', value: 'Tiết 13 - Tiết 17' },
+                            { label: 'Tiết 13 - Tiết 15', value: 'Tiết 13 - Tiết 15' },
                         ]}
                         placeholder={{
                             label: 'Chọn tiết...',
@@ -90,19 +152,40 @@ const AddLecturerSchedule = ({ navigation }) => {
                                 right: 12,
                             },
                         }}
-                        value={selectedValue}
+                        value={section}
+                        useNativeAndroidPickerStyle={false} // Để style tùy chỉnh hoạt động trên Android
+                    />
+                </View>
+                <Text style={styles.label}>Chọn Chuyên Ngành</Text>
+                <View style={styles.inputContainer}>
+                    <RNPickerSelect
+                        onValueChange={(value) => handleChangeDepartments(value)}
+                        items={listDepartments}
+                        placeholder={{
+                            label: 'Chọn chuyên ngành...',
+                            value: null,
+                            color: '#9E9E9E',
+                        }}
+                        style={{
+                            inputIOS: styles.pickerInput,
+                            inputAndroid: styles.pickerInput,
+                            placeholder: {
+                                color: '#9E9E9E',
+                            },
+                            iconContainer: {
+                                top: 10,
+                                right: 12,
+                            },
+                        }}
+                        value={departments}
                         useNativeAndroidPickerStyle={false} // Để style tùy chỉnh hoạt động trên Android
                     />
                 </View>
                 <Text style={styles.label}>Chọn Môn Học</Text>
                 <View style={styles.inputContainer}>
                     <RNPickerSelect
-                        onValueChange={(value) => setSelectedValue(value)}
-                        items={[
-                            { label: 'Football', value: 'football' },
-                            { label: 'Baseball', value: 'baseball' },
-                            { label: 'Hockey', value: 'hockey' },
-                        ]}
+                        onValueChange={(value) => setCourse(value)}
+                        items={listCourses}
                         placeholder={{
                             label: 'Chọn môn học...',
                             value: null,
@@ -119,36 +202,7 @@ const AddLecturerSchedule = ({ navigation }) => {
                                 right: 12,
                             },
                         }}
-                        value={selectedValue}
-                        useNativeAndroidPickerStyle={false} // Để style tùy chỉnh hoạt động trên Android
-                    />
-                </View>
-                <Text style={styles.label}>Chọn Thính Giảng</Text>
-                <View style={styles.inputContainer}>
-                    <RNPickerSelect
-                        onValueChange={(value) => setSelectedValue(value)}
-                        items={[
-                            { label: 'Football', value: 'football' },
-                            { label: 'Baseball', value: 'baseball' },
-                            { label: 'Hockey', value: 'hockey' },
-                        ]}
-                        placeholder={{
-                            label: 'Chọn Thính Giảng...',
-                            value: null,
-                            color: '#9E9E9E',
-                        }}
-                        style={{
-                            inputIOS: styles.pickerInput,
-                            inputAndroid: styles.pickerInput,
-                            placeholder: {
-                                color: '#9E9E9E',
-                            },
-                            iconContainer: {
-                                top: 10,
-                                right: 12,
-                            },
-                        }}
-                        value={selectedValue}
+                        value={course}
                         useNativeAndroidPickerStyle={false} // Để style tùy chỉnh hoạt động trên Android
                     />
                 </View>

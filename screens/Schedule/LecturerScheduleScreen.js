@@ -1,44 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Text } from 'react-native';
 import { Appbar, Divider, Card, Avatar, Button } from 'react-native-paper';
 import moment from 'moment'; // Thư viện để làm việc với thời gian
+import axios from 'axios';
+import { useIsFocused } from "@react-navigation/native";
 
 const LecturerScheduleScreen = ({ navigation }) => {
+  const isFocused = useIsFocused();
   // Ngày hiện tại để hiển thị lịch
   const [currentDate, setCurrentDate] = useState(moment()); // Sử dụng moment để dễ dàng quản lý ngày
+  const [scheduleData, setScheduleData] = useState({});
 
-  // Dữ liệu giả lập cho các lịch giảng của giảng viên
-  const scheduleData = {
-    'Thứ 2': [
-      {
-        lecturer_id: 1,
-        name: 'Nguyễn Văn A',
-        photo_url: 'https://example.com/photo1.jpg',
-        course_name: 'Lập trình Cơ bản',
-        time: '08:00 - 10:00',
-        status: 'Đã duyệt',
-      },
-      {
-        lecturer_id: 2,
-        name: 'Trần Thị B',
-        photo_url: 'https://example.com/photo2.jpg',
-        course_name: 'Mạng máy tính',
-        time: '10:30 - 12:00',
-        status: 'Chưa duyệt',
-      },
-    ],
-    'Thứ 3': [
-      {
-        lecturer_id: 3,
-        name: 'Lê Văn C',
-        photo_url: 'https://example.com/photo3.jpg',
-        course_name: 'Cấu trúc dữ liệu',
-        time: '09:00 - 11:00',
-        status: 'Đã duyệt',
-      },
-    ],
-    // Thêm dữ liệu cho các ngày còn lại nếu cần
-  };
+  const fetchData = async () => {
+    axios.get(`http://10.0.2.2:3001/schedules/?week=${currentDate.format('W/YYYY').split('/')[0]}`)
+      .then(response => {
+        setScheduleData(response.data)
+      })
+      .catch(error => {
+        console.error('Lỗi khi lấy thông tin:', error);
+      });
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, [currentDate, isFocused]);
 
   // Hàm để chuyển đến tuần trước
   const goToPreviousWeek = () => {
@@ -55,7 +40,7 @@ const LecturerScheduleScreen = ({ navigation }) => {
       <Appbar.Header style={styles.header}>
         <Appbar.Action icon="home" onPress={() => navigation.goBack()} color="#FFFFFF" />
         <Appbar.Content title="Lịch Giảng" titleStyle={styles.headerTitle} />
-        <Appbar.Action icon="account-plus" onPress={() => navigation.navigate('AddLecturerSchedule')} color="#FFFFFF" />
+        <Appbar.Action />
       </Appbar.Header>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -66,28 +51,36 @@ const LecturerScheduleScreen = ({ navigation }) => {
           <View key={day} style={styles.containerTitle}>
             <Text style={styles.title}>{day}</Text>
             <Divider style={styles.dividerTitle} />
-            {scheduleData[day].map((lecturer) => (
-              <Card key={lecturer.lecturer_id} style={styles.card}>
-                <Card.Title
-                  title={lecturer.name}
-                  subtitle={`${lecturer.course_name} - ${lecturer.time}`}
-                  left={(props) => (
-                    <Avatar.Image
-                      {...props}
-                      source={{ uri: lecturer.photo_url }}
-                      size={40}
-                    />
-                  )}
-                />
-                <Card.Content>
-                  <Text style={styles.status}>
-                    Trạng thái: {lecturer.status}
-                  </Text>
-                </Card.Content>
-              </Card>
-            ))}
+            {scheduleData[day].length > 0 ? (
+              scheduleData[day].map((lecturer, index) => (
+                <Card key={`${day}-${lecturer.lecturer_id}-${index}`} style={styles.card}>
+                  <Card.Title
+                    title={lecturer.name}
+                    subtitle={`${lecturer.course_name}`}
+                    left={(props) => (
+                      <Avatar.Image
+                        {...props}
+                        source={{ uri: `http://10.0.2.2:3001/${lecturer.photo_url}` }}
+                        size={40}
+                      />
+                    )}
+                  />
+                  <Card.Content>
+                    <Text style={styles.status}>
+                      {lecturer.time}
+                    </Text>
+                    <Text style={styles.status}>
+                      Trạng thái: {lecturer.status}
+                    </Text>
+                  </Card.Content>
+                </Card>
+              ))
+            ) : (
+              <Text style={styles.noScheduleText}>Chưa có lịch giảng</Text>
+            )}
           </View>
         ))}
+
 
         <View style={styles.buttonContainer}>
           <Button mode="contained" onPress={goToPreviousWeek} style={styles.button}>
@@ -152,6 +145,12 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 5,
   },
+  noScheduleText: {
+    fontSize: 14,
+    color: '#A9A9A9', // Màu xám nhạt
+    textAlign: 'center',
+    marginVertical: 10,
+  }
 });
 
 export default LecturerScheduleScreen;

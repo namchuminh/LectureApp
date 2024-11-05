@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FlatList, View, StyleSheet, Text } from 'react-native';
-import { Appbar, Card, Avatar } from 'react-native-paper';
+import { Appbar, Card, Avatar, IconButton } from 'react-native-paper';
 import axios from 'axios';
 import { useIsFocused } from "@react-navigation/native";
 
@@ -42,7 +42,7 @@ const List = ({ navigation }) => {
             <Appbar.Header style={styles.header}>
                 <Appbar.Action  icon="home" onPress={() => navigation.goBack()} color="#FFFFFF" />
                 <Appbar.Content title="Thính Giảng" titleStyle={styles.headerTitle} />
-                <Appbar.Action icon="magnify" onPress={() => navigation.navigate('Add')} color="#FFFFFF" />
+                <Appbar.Action />
             </Appbar.Header>
 
             {/* Tabs */}
@@ -81,6 +81,15 @@ const List = ({ navigation }) => {
                                     source={{ uri: `http://10.0.2.2:3001/${item.photo_url}` }}
                                     size={50}
                                 />
+                            )}
+                            right={(props) => (
+                                item.status == 1 && ( // Kiểm tra điều kiện
+                                    <IconButton
+                                        icon="calendar-plus"
+                                        color="#D32F2F"
+                                        onPress={() => navigation.navigate('AddLecturerSchedule', { lecturer_id: item.lecturer_id })}
+                                    />
+                                )
                             )}
                         />
                     </Card>
