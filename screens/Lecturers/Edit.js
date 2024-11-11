@@ -1,45 +1,69 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ImageBackground, ScrollView  } from 'react-native';
+import { View, Text, StyleSheet, Image, ImageBackground, ScrollView } from 'react-native';
 import { Appbar, Button } from 'react-native-paper';
 import axios from 'axios';
+import CryptoJS from 'crypto-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const decodeJWT = (token) => {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+        throw new Error('JWT không hợp lệ');
+    }
+
+    const payload = parts[1];
+    const decoded = CryptoJS.enc.Base64.parse(payload);
+    return JSON.parse(decoded.toString(CryptoJS.enc.Utf8));
+};
 
 const Edit = ({ route, navigation }) => {
     const { lecturer_id } = route.params;
     const [showDegree, setShowDegree] = useState(false);
     const [lecturer, setLecturer] = useState({});
+    const [isAdmin, setIsAdmin] = useState(true)
 
     const fetchData = () => {
         axios.get(`http://10.0.2.2:3001/lecturers/${lecturer_id}`)
-        .then(response => {
-            setLecturer(response.data.lecturer)
-        })
-        .catch(error => {
-            console.error('Lỗi khi lấy thông tin:', error);
-        });
+            .then(response => {
+                setLecturer(response.data.lecturer)
+            })
+            .catch(error => {
+                console.error('Lỗi khi lấy thông tin:', error);
+            });
+    }
+
+    const checkAdmin = async () => {
+        const token = await AsyncStorage.getItem('token');
+        const decodedToken = decodeJWT(token);
+        if (decodedToken.account.role == 'lecturer') {
+            setIsAdmin(false);
+        } else {
+            setIsAdmin(true)
+        }
     }
 
     useEffect(() => {
         fetchData();
-    }, []); 
+        checkAdmin();
+    }, []);
 
     const handleStatus = (status) => {
-        if(status == 0){
+        if (status == 0) {
             axios.patch(`http://10.0.2.2:3001/lecturers/${lecturer_id}/status`)
-            .then(response => {
-                fetchData();
-            })
-            .catch(error => {
-                console.error('Lỗi khi lấy thông tin:', error);
-            });
-        }else{
+                .then(response => {
+                    fetchData();
+                })
+                .catch(error => {
+                    console.error('Lỗi khi lấy thông tin:', error);
+                });
+        } else {
             axios.delete(`http://10.0.2.2:3001/lecturers/${lecturer_id}`)
-            .then(response => {
-                navigation.goBack();
-            })
-            .catch(error => {
-                console.error('Lỗi khi lấy thông tin:', error);
-            });
+                .then(response => {
+                    navigation.goBack();
+                })
+                .catch(error => {
+                    console.error('Lỗi khi lấy thông tin:', error);
+                });
         }
     }
 
@@ -53,7 +77,13 @@ const Edit = ({ route, navigation }) => {
             <Appbar.Header style={styles.header}>
                 <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} color="#FFFFFF" />
                 <Appbar.Content title="Thông Tin" titleStyle={styles.headerTitle} />
-                <Appbar.Action onPress={() => handleStatus(lecturer.status)} icon={lecturer.status == 0 ? "check" : "trash-can"} color="#FFFFFF" />
+                {
+                    isAdmin == true ?
+                        <Appbar.Action onPress={() => handleStatus(lecturer.status)} icon={lecturer.status == 0 ? "check" : "trash-can"} color="#FFFFFF" />
+                        :
+                        <Appbar.Action />
+                }
+
             </Appbar.Header>
 
             {/* Avatar */}
@@ -78,15 +108,21 @@ const Edit = ({ route, navigation }) => {
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Ngày Sinh:</Text>
-                    <Text style={styles.value}>{lecturer.date_of_birth}</Text>
+                    <Text style={styles.value}>
+                        {isAdmin ? lecturer.date_of_birth : lecturer.date_of_birth?.slice(0, 4) + '-**-**'}
+                    </Text>
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Email:</Text>
-                    <Text style={styles.value}>{lecturer.email}</Text>
+                    <Text style={styles.value}>
+                        {isAdmin ? lecturer.email : lecturer.email?.slice(0, 5) + '****@gmail.com'}
+                    </Text>
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Điện Thoại:</Text>
-                    <Text style={styles.value}>{lecturer.phone}</Text>
+                    <Text style={styles.value}>
+                        {isAdmin ? lecturer.phone : lecturer.phone?.slice(0, 3) + '-****-****'}
+                    </Text>
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Địa Chỉ:</Text>
@@ -104,15 +140,21 @@ const Edit = ({ route, navigation }) => {
                     <Text style={styles.label}>Đánh Giá:</Text>
                     <Text style={styles.value}>4.5 / 5</Text>
                 </View>
+
                 {
-                    showDegree == true 
-                    ?
-                        <Image source={{ uri: `http://10.0.2.2:3001/${lecturer.photo_degree}` }} style={styles.degreeImage} />
-                    :
-                    <Button style={styles.btn} onPress={() => setShowDegree(true)}>
-                        <Text style={styles.btnText}>Xem Bằng Cấp</Text>
-                    </Button>
+                    isAdmin == true
+                        ?
+                        showDegree == true
+                            ?
+                            <Image source={{ uri: `http://10.0.2.2:3001/${lecturer.photo_degree}` }} style={styles.degreeImage} />
+                            :
+                            <Button style={styles.btn} onPress={() => setShowDegree(true)}>
+                                <Text style={styles.btnText}>Xem Bằng Cấp</Text>
+                            </Button>
+                        :
+                        null
                 }
+
             </View>
         </ScrollView>
     );
@@ -176,7 +218,7 @@ const styles = StyleSheet.create({
         color: '#FFFFFF'
     },
     degreeImage: {
-        width: '100%',              
+        width: '100%',
         height: 200,
         marginVertical: 20
     },

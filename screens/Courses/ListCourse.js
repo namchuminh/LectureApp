@@ -3,12 +3,25 @@ import { View, FlatList, StyleSheet } from 'react-native';
 import { Appbar, Card, Text, Button, IconButton, Divider, Icon } from 'react-native-paper';
 import axios from 'axios';
 import { useIsFocused } from "@react-navigation/native";
+import CryptoJS from 'crypto-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const decodeJWT = (token) => {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+        throw new Error('JWT không hợp lệ');
+    }
+    
+    const payload = parts[1];
+    const decoded = CryptoJS.enc.Base64.parse(payload);
+    return JSON.parse(decoded.toString(CryptoJS.enc.Utf8));
+};
 const ListCourse = ({ route, navigation }) => {
     const { department_id } = route.params || {};
 
     const isFocused = useIsFocused();
     const [courses, setCourses] = useState([]);
+    const [isAdmin, setIsAdmin] = useState(true)
 
     const fetchData = async () => {
         axios.get(`http://10.0.2.2:3001/courses/${department_id}/index`)
@@ -20,8 +33,19 @@ const ListCourse = ({ route, navigation }) => {
         });
     }
 
+    const checkAdmin = async () => {
+        const token = await AsyncStorage.getItem('token');
+        const decodedToken = decodeJWT(token);
+        if(decodedToken.account.role == 'lecturer'){
+            setIsAdmin(false);
+        }else{
+            setIsAdmin(true)
+        }
+    }
+
     useEffect(() => {
         fetchData();
+        checkAdmin();
     },[isFocused])
 
     const handelDelete = (id) => {
@@ -39,7 +63,12 @@ const ListCourse = ({ route, navigation }) => {
             <Appbar.Header style={styles.header}>
                 <Appbar.Action icon="arrow-left" onPress={() => navigation.navigate('ListDepartment')} color="#FFFFFF" />
                 <Appbar.Content title="Môn Học" titleStyle={styles.headerTitle} />
-                <Appbar.Action icon="plus" onPress={() => navigation.navigate('AddCourse', { department_id })} color="#FFFFFF" />
+                {
+                    isAdmin == true ?
+                        <Appbar.Action icon="plus" onPress={() => navigation.navigate('AddCourse', { department_id })} color="#FFFFFF" />
+                    :
+                        <Appbar.Action />
+                }
             </Appbar.Header>
             {
                 courses.length != 0 
@@ -59,18 +88,33 @@ const ListCourse = ({ route, navigation }) => {
                                 <Divider style={styles.divider} />
                                 <Card.Actions style={styles.actions}>
                                     <Button  style={{ backgroundColor: 'white' }} onPress={() => navigation.navigate('LecturerListByCourse', { course: item })}>
-                                        <Text style={styles.btnText}>Thính Giảng</Text>
+                                        <Text style={styles.btnText}>
+                                            {
+                                                isAdmin ? 
+                                                    "Thính Giảng"
+                                                :
+                                                    "Xem Thính Giảng"
+                                            }
+                                        </Text>
                                     </Button>
-                                    <IconButton
-                                        icon="square-edit-outline"
-                                        color="#D32F2F"
-                                        onPress={() => navigation.navigate('EditCourse', { course_id: item.course_id })}
-                                    />
-                                    <IconButton
-                                        icon="delete"
-                                        color="#D32F2F"
-                                        onPress={() => handelDelete(item.course_id)}
-                                    />
+                                    {
+                                        isAdmin == true ?
+                                            <>
+                                                <IconButton
+                                                    icon="square-edit-outline"
+                                                    color="#D32F2F"
+                                                    onPress={() => navigation.navigate('EditCourse', { course_id: item.course_id })}
+                                                />
+                                                <IconButton
+                                                    icon="delete"
+                                                    color="#D32F2F"
+                                                    onPress={() => handelDelete(item.course_id)}
+                                                />
+                                            </>
+                                        :
+                                            null
+                                    }
+                                    
                                 </Card.Actions>
                             </Card>
                         )}

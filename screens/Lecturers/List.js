@@ -3,14 +3,25 @@ import { FlatList, View, StyleSheet, Text } from 'react-native';
 import { Appbar, Card, Avatar, IconButton } from 'react-native-paper';
 import axios from 'axios';
 import { useIsFocused } from "@react-navigation/native";
+import CryptoJS from 'crypto-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
+const decodeJWT = (token) => {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+        throw new Error('JWT không hợp lệ');
+    }
+    
+    const payload = parts[1];
+    const decoded = CryptoJS.enc.Base64.parse(payload);
+    return JSON.parse(decoded.toString(CryptoJS.enc.Utf8));
+};
 const List = ({ navigation }) => {
     const isFocused = useIsFocused();
     const [lecturers, setLecturers] = useState([]);
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState('Danh sách'); // Trạng thái để lưu tab đang chọn
-
+    const [isAdmin, setIsAdmin] = useState(true)
     const handleSearch = (text) => {
         setSearch(text);
     };
@@ -32,9 +43,19 @@ const List = ({ navigation }) => {
         });
     }
 
+    const checkAdmin = async () => {
+        const token = await AsyncStorage.getItem('token');
+        const decodedToken = decodeJWT(token);
+        if(decodedToken.account.role == 'lecturer'){
+            setIsAdmin(false);
+        }else{
+            setIsAdmin(true)
+        }
+    }
     
     useEffect(() => {
         fetchData();
+        checkAdmin();
     },[isFocused])
 
     return (
@@ -46,27 +67,33 @@ const List = ({ navigation }) => {
             </Appbar.Header>
 
             {/* Tabs */}
-            <View style={styles.tabContainer}>
-                <Text
-                    style={[
-                        styles.tabButton,
-                        activeTab === 'Danh sách' && styles.activeTab,
-                    ]}
-                    onPress={() => setActiveTab('Danh sách')}
-                >
-                    Danh sách
-                </Text>
-                <Text
-                    style={[
-                        styles.tabButton,
-                        activeTab === 'Đang chờ' && styles.activeTab,
-                    ]}
-                    onPress={() => setActiveTab('Đang chờ')}
-                >
-                    Đang chờ
-                </Text>
-            </View>
-
+            {
+                isAdmin == true
+                ?
+                    <View style={styles.tabContainer}>
+                        <Text
+                            style={[
+                                styles.tabButton,
+                                activeTab === 'Danh sách' && styles.activeTab,
+                            ]}
+                            onPress={() => setActiveTab('Danh sách')}
+                        >
+                            Danh sách
+                        </Text>
+                        <Text
+                            style={[
+                                styles.tabButton,
+                                activeTab === 'Đang chờ' && styles.activeTab,
+                            ]}
+                            onPress={() => setActiveTab('Đang chờ')}
+                        >
+                            Đang chờ
+                        </Text>
+                    </View>
+                :
+                null
+            }
+        
             <FlatList
                 data={filteredLecturers}
                 keyExtractor={(item) => item.lecturer_id.toString()}
@@ -83,13 +110,15 @@ const List = ({ navigation }) => {
                                 />
                             )}
                             right={(props) => (
-                                item.status == 1 && ( // Kiểm tra điều kiện
+                                item.status == 1 && isAdmin == true ? ( // Kiểm tra điều kiện
                                     <IconButton
                                         icon="calendar-plus"
                                         color="#D32F2F"
                                         onPress={() => navigation.navigate('AddLecturerSchedule', { lecturer_id: item.lecturer_id })}
                                     />
                                 )
+                                :
+                                null
                             )}
                         />
                     </Card>

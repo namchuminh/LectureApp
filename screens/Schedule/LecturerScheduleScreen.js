@@ -4,21 +4,49 @@ import { Appbar, Divider, Card, Avatar, Button } from 'react-native-paper';
 import moment from 'moment'; // Thư viện để làm việc với thời gian
 import axios from 'axios';
 import { useIsFocused } from "@react-navigation/native";
+import CryptoJS from 'crypto-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const decodeJWT = (token) => {
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    throw new Error('JWT không hợp lệ');
+  }
+
+  const payload = parts[1];
+  const decoded = CryptoJS.enc.Base64.parse(payload);
+  return JSON.parse(decoded.toString(CryptoJS.enc.Utf8));
+};
 
 const LecturerScheduleScreen = ({ navigation }) => {
   const isFocused = useIsFocused();
   // Ngày hiện tại để hiển thị lịch
   const [currentDate, setCurrentDate] = useState(moment()); // Sử dụng moment để dễ dàng quản lý ngày
   const [scheduleData, setScheduleData] = useState({});
+  const [isAdmin, setIsAdmin] = useState(true)
 
   const fetchData = async () => {
-    axios.get(`http://10.0.2.2:3001/schedules/?week=${currentDate.format('W/YYYY').split('/')[0]}`)
-      .then(response => {
-        setScheduleData(response.data)
-      })
-      .catch(error => {
-        console.error('Lỗi khi lấy thông tin:', error);
-      });
+    const token = await AsyncStorage.getItem('token');
+    const decodedToken = decodeJWT(token);
+    if (decodedToken.account.role == 'lecturer') {
+      setIsAdmin(false);
+      axios.get(`http://10.0.2.2:3001/schedules/?week=${currentDate.format('W/YYYY').split('/')[0]}&lecturer_id=${decodedToken.lecturer.lecturer_id}`)
+        .then(response => {
+          setScheduleData(response.data)
+        })
+        .catch(error => {
+          console.error('Lỗi khi lấy thông tin:', error);
+        });
+    } else {
+      setIsAdmin(true)
+      axios.get(`http://10.0.2.2:3001/schedules/?week=${currentDate.format('W/YYYY').split('/')[0]}`)
+        .then(response => {
+          setScheduleData(response.data)
+        })
+        .catch(error => {
+          console.error('Lỗi khi lấy thông tin:', error);
+        });
+    }
   }
 
   useEffect(() => {
@@ -34,6 +62,20 @@ const LecturerScheduleScreen = ({ navigation }) => {
   const goToNextWeek = () => {
     setCurrentDate(currentDate.clone().add(1, 'week'));
   };
+
+  const handleStatus = (schedule_id, status) => {
+    const data = {
+      status
+    };
+    axios.patch(`http://10.0.2.2:3001/schedules/${schedule_id}/status`, data)
+        .then(response => {
+          fetchData();
+        })
+        .catch(error => {
+          console.error('Lỗi khi xử lý:', error);
+        });
+  }
+
 
   return (
     <View style={styles.container}>
@@ -67,12 +109,36 @@ const LecturerScheduleScreen = ({ navigation }) => {
                   />
                   <Card.Content>
                     <Text style={styles.status}>
-                      {lecturer.time}
+                      Thời Gian: {lecturer.time}
                     </Text>
+                    <Text></Text>
                     <Text style={styles.status}>
-                      Trạng thái: {lecturer.status}
+                      Trạng Thái: {lecturer.status}
                     </Text>
                   </Card.Content>
+                  <Divider style={styles.divider} />
+                  {
+                    isAdmin == false ?
+                      lecturer.status == "Chưa duyệt" ?
+                      <>
+                        <Card.Actions style={styles.actions}>
+                          <Button style={{ backgroundColor: 'white' }} onPress={() => handleStatus(lecturer.schedule_id, "approved")}>
+                            <Text style={styles.btnText}>
+                              Đồng Ý
+                            </Text>
+                          </Button>
+                          <Button style={{ backgroundColor: 'white' }} onPress={() => handleStatus(lecturer.schedule_id, "rejected")}>
+                            <Text style={styles.btnText}>
+                              Từ Chối
+                            </Text>
+                          </Button>
+                        </Card.Actions>
+                      </>
+                      :
+                      null
+                    :
+                      null
+                  }
                 </Card>
               ))
             ) : (
@@ -150,7 +216,17 @@ const styles = StyleSheet.create({
     color: '#A9A9A9', // Màu xám nhạt
     textAlign: 'center',
     marginVertical: 10,
-  }
+  },
+  divider: {
+    marginVertical: 8,
+    marginHorizontal: 15
+  },
+  actions: {
+    justifyContent: 'flex-end',
+  },
+  btnText: {
+    color: '#3F51B5',
+  },
 });
 
 export default LecturerScheduleScreen;
